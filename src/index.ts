@@ -1,12 +1,12 @@
 import { google } from "@ai-sdk/google";
-import { generateText, stepCountIs } from "ai";
+import { generateText, stepCountIs, ToolLoopAgent } from "ai";
 import { z } from "zod";
 import { command, parser } from "zod-opts";
 import pkg from "../package.json";
 import type { InferredOptions } from "./cli-utils";
 import { tools } from "./tools";
 
-const argSchema = {
+const baseArgSchema = {
 	prompt: {
 		type: z.string().describe("prompt"),
 		alias: "p",
@@ -16,7 +16,15 @@ const argSchema = {
 	},
 };
 
-type ArgType = InferredOptions<typeof argSchema>;
+const agentArgSchema = {
+	...baseArgSchema,
+	maxSteps: {
+		type: z.number().int().positive().default(20).describe("max steps"),
+	},
+};
+
+type ArgType = InferredOptions<typeof baseArgSchema>;
+type AgentArgType = InferredOptions<typeof agentArgSchema>;
 
 export async function chat(args: ArgType) {
 	const res = await generateText({
@@ -27,15 +35,20 @@ export async function chat(args: ArgType) {
 	console.log(res.text);
 }
 
-export async function agent(args: ArgType) {
-	const res = await generateText({
-		prompt: args.prompt,
+export async function agent(args: AgentArgType) {
+	const agent = new ToolLoopAgent({
 		model: google(args.model),
 		tools,
-		stopWhen: stepCountIs(10),
-		experimental_onToolCallStart({ toolCall }) {
-			console.log(`${toolCall.toolName} ${JSON.stringify(toolCall.input)}`);
+		stopWhen: stepCountIs(args.maxSteps),
+		onStepFinish(step) {
+			for (const toolCall of step.toolCalls) {
+				console.log(`${toolCall.toolName} ${JSON.stringify(toolCall.input)}`);
+			}
 		},
+	});
+
+	const res = await agent.generate({
+		prompt: args.prompt,
 	});
 
 	console.log(res.text);
@@ -43,12 +56,12 @@ export async function agent(args: ArgType) {
 
 const chatCmd = command("chat")
 	.description("single turn chat")
-	.options(argSchema)
+	.options(baseArgSchema)
 	.action(chat);
 
 const agentCmd = command("agent")
 	.description("tool loop agent")
-	.options(argSchema)
+	.options(agentArgSchema)
 	.action(agent);
 
 if (import.meta.main) {
