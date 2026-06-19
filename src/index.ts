@@ -1,11 +1,12 @@
 import { google } from "@ai-sdk/google";
-import { generateText } from "ai";
+import { generateText, stepCountIs } from "ai";
 import { z } from "zod";
 import { command, parser } from "zod-opts";
 import pkg from "../package.json";
 import type { InferredOptions } from "./cli-utils";
+import { tools } from "./tools";
 
-const cmdArgSchema = {
+const argSchema = {
 	prompt: {
 		type: z.string().describe("prompt"),
 		alias: "p",
@@ -15,13 +16,9 @@ const cmdArgSchema = {
 	},
 };
 
-type CmdArgType = InferredOptions<typeof cmdArgSchema>;
+type ArgType = InferredOptions<typeof argSchema>;
 
-export function hello(name: string) {
-	return `Hello, ${name}!`;
-}
-
-export async function chat(args: CmdArgType) {
+export async function chat(args: ArgType) {
 	const res = await generateText({
 		prompt: args.prompt,
 		model: google(args.model),
@@ -30,11 +27,35 @@ export async function chat(args: CmdArgType) {
 	console.log(res.text);
 }
 
-const cmd = command("chat")
+export async function agent(args: ArgType) {
+	const res = await generateText({
+		prompt: args.prompt,
+		model: google(args.model),
+		tools,
+		stopWhen: stepCountIs(10),
+		experimental_onToolCallStart({ toolCall }) {
+			console.log(`${toolCall.toolName} ${JSON.stringify(toolCall.input)}`);
+		},
+	});
+
+	console.log(res.text);
+}
+
+const chatCmd = command("chat")
 	.description("single turn chat")
-	.options(cmdArgSchema)
+	.options(argSchema)
 	.action(chat);
 
+const agentCmd = command("agent")
+	.description("tool loop agent")
+	.options(argSchema)
+	.action(agent);
+
 if (import.meta.main) {
-	parser().version(pkg.version).name(pkg.name).subcommand(cmd).parse();
+	parser()
+		.version(pkg.version)
+		.name(pkg.name)
+		.subcommand(chatCmd)
+		.subcommand(agentCmd)
+		.parse();
 }
