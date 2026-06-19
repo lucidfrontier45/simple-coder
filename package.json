@@ -1,0 +1,25 @@
+{
+	"name": "bun-ts-project-template",
+	"module": "src/index.ts",
+	"type": "module",
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.15",
+		"@types/bun": "^1.3.13",
+		"@typescript/native-preview": "^7.0.0-dev.20260510.1"
+	},
+	"bin": {
+		"myapptest": "./bin/main.ts"
+	},
+	"version": "",
+	"scripts": {
+		"dev": "bun --watch run.ts",
+		"test": "bun test",
+		"check": "biome check --write src/ && bun run typecheck",
+		"format": "biome format --write src/",
+		"typecheck": "tsgo --noEmit",
+		"build": "bun build run.ts --outdir ./dist"
+	},
+	"dependencies": {
+		"zod-opts": "^1.0.0"
+	}
+}
