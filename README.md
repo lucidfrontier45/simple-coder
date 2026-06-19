@@ -1,5 +1,5 @@
-# bun-ts-project-template
-A Project Template for Bun with Typescript
+# Simple Coder
+A Toy Coding Agent Project
 
 ## Environment Setup
 

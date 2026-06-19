@@ -7,7 +7,6 @@ All agents and contributors must follow the command structure and coding standar
 
 - **Runtime**: [Bun](https://bun.sh/), all scripts must be executed using `bun run <script>`.
 - **Lintier and Type Checker**: [Biome](https://biomejs.dev/) and [typescript-go (tsgo)](https://github.com/tsgo/tsgo), invoked by `bun check`.
-- **Formatter**: [Biome](https://biomejs.dev/), invoked by `bun format`.
 - **Testing**: Built-in Bun test runner, invoked by `bun test`.
 
 ## 📂 Architecture Responsibilities
@@ -20,7 +19,7 @@ All agents and contributors must follow the command structure and coding standar
 
 1. **Before completion**: Always run `bun check` to ensure the generated code adheres to project rules.
 2. **Type Safety**: Prioritize fixing `tsgo` errors in source logic; avoid using `@ts-ignore`.
-3. **Consistency**: Do not manually format code in a way that conflicts with `biome.json`. Rely on `bun fmt`.
+3. **Consistency**: Do not manually format code in a way that conflicts with `biome.json`. Rely on `bun format`.
 
 ## General Typescript Guidelines
 

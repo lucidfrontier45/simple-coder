@@ -20,6 +20,9 @@
 		"build": "bun build run.ts --outdir ./dist"
 	},
 	"dependencies": {
+		"@ai-sdk/google": "^3.0.83",
+		"ai": "^6.0.208",
+		"zod": "^4.4.3",
 		"zod-opts": "^1.0.0"
 	}
 }
