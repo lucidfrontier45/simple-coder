@@ -21,6 +21,9 @@ const agentArgSchema = {
 	maxSteps: {
 		type: z.number().int().positive().default(20).describe("max steps"),
 	},
+	path: {
+		type: z.string().default(".").describe("working directory"),
+	},
 };
 
 type ArgType = InferredOptions<typeof baseArgSchema>;
@@ -36,9 +39,19 @@ export async function chat(args: ArgType) {
 }
 
 export async function agent(args: AgentArgType) {
+	const agentsMd = await Bun.file("AGENTS.md").text();
+
+	const instructions = [
+		`Target project path: ${args.path}. Always use this path for file operations (read, glob, grep).`,
+		"",
+		"## AGENTS.md (Project Rules)",
+		agentsMd,
+	].join("\n");
+
 	const agent = new ToolLoopAgent({
 		model: google(args.model),
 		tools,
+		instructions,
 		stopWhen: stepCountIs(args.maxSteps),
 		onStepFinish(step) {
 			for (const toolCall of step.toolCalls) {
